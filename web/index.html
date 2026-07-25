@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0d1117">
+    <title>Premium Dashboard</title>
+
+    <!-- Telegram Mini App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Google Fonts — Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Uygulama stilleri -->
+    <link rel="stylesheet" href="/web/styles.css">
+
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            text-size-adjust: 100%;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-top: env(safe-area-inset-top);
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           DASHBOARD BAŞLANGIÇTA GİZLİ
+           JavaScript'den APPRVOED ise görünür yapılır
+           ============================================================ */
+        #app {
+            display: none;
+        }
+
+        /* ============================================================
+           ERİŞİM EKRANLARI
+           ============================================================ */
+
+        #access-denied-pending,
+        #access-denied-rejected {
+            display: none;
+        }
+
+        /* ============================================================
+           PENDING EKRAN
+           ============================================================ */
+        .access-denied {
+            flex-direction: column !important;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .icon-circle.pending-icon {
+            background: rgba(210, 153, 34, 0.15);
+            border: 2px solid #d29922;
+        }
+
+        .icon-circle.rejected-icon {
+            background: rgba(248, 81, 73, 0.15);
+            border: 2px solid #f85149;
+        }
+
+        .icon-circle i {
+            font-size: 32px;
+        }
+
+        .icon-circle.pending-icon i {
+            color: #d29922;
+        }
+
+        .icon-circle.rejected-icon i {
+            color: #f85149;
+        }
+
+        .access-denied h2,
+        .rejected-screen h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #e6edf3;
+        }
+
+        .access-denied p,
+        .rejected-screen p {
+            font-size: 14px;
+            color: #8b949e;
+            line-height: 1.6;
+            max-width: 300px;
+        }
+
+        .sub-text {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #484f58;
+        }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #user-photo {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            border: 2px solid #3fb950;
+            background: #21262d;
+            flex-shrink: 0;
+        }
+
+        .user-info h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #e6edf3;
+            line-height: 1.3;
+            letter-spacing: -0.01em;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            padding: 2px 8px;
+            border-radius: 20px;
+            border: 1px solid;
+            text-transform: uppercase;
+        }
+
+        .badge.pending {
+            background: #2d1f0e;
+            color: #d29922;
+            border-color: #9e6a03;
+        }
+
+        .badge.approved {
+            background: #1f3a2a;
+            color: #3fb950;
+            border-color: #2ea043;
+        }
+
+        .badge.rejected {
+            background: #2d1215;
+            color: #f85149;
+            border-color: #da3633;
+        }
+
+        .header-actions i {
+            font-size: 20px;
+            color: #8b949e;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .header-actions i:active {
+            color: #e6edf3;
+            background: #21262d;
+        }
+
+        /* ============================================================
+           BALANCE CARD
+           ============================================================ */
+        .balance-card {
+            margin: 20px 16px;
+            padding: 24px 20px;
+            background: linear-gradient(135deg, #1a3a5c 0%, #0d2137 50%, #0a1628 100%);
+            border-radius: 20px;
+            border: 1px solid #1f4068;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(63,185,80,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .balance-card > p {
+            font-size: 12px;
+            font-weight: 500;
+            color: #8b949e;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        #total-balance {
+            font-size: 36px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        .currency {
+            font-size: 16px;
+            font-weight: 600;
+            color: #3fb950;
+            letter-spacing: 0.02em;
+        }
+
+        .balance-details {
+            display: flex;
+            gap: 32px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .detail-item span {
+            display: block;
+            font-size: 11px;
+            color: #8b949e;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            margin-bottom: 4px;
+        }
+
+        .detail-item strong {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e6edf3;
+            letter-spacing: -0.02em;
+        }
+
+        /* ============================================================
+           QUICK ACTIONS
+           ============================================================ */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            padding: 0 16px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 8px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 16px;
+            color: #e6edf3;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.2s, border-color 0.2s, transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .action-btn:active {
+            transform: scale(0.96);
+            background: #21262d;
+        }
+
+        .action-btn i {
+            font-size: 22px;
+            color: #3fb950;
+        }
+
+        .action-btn span {
+            font-size: 11px;
+            font-weight: 600;
+            color: #8b949e;
+            letter-spacing: 0.02em;
+        }
+
+        /* ============================================================
+           STATS SECTION
+           ============================================================ */
+        .stats-section,
+        .history-section {
+            margin: 0 16px 20px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .section-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e6edf3;
+            letter-spacing: -0.01em;
+        }
+
+        .section-header a {
+            font-size: 12px;
+            color: #3fb950;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .stat-item .label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #8b949e;
+            letter-spacing: 0.03em;
+        }
+
+        .stat-item .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #e6edf3;
+            letter-spacing: -0.02em;
+        }
+
+        /* ============================================================
+           HISTORY SECTION
+           ============================================================ */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #8b949e;
+            font-size: 13px;
+            padding: 24px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 14px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+        }
+
+        .history-item .info h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+
+        .history-item .info span {
+            font-size: 11px;
+            color: #8b949e;
+        }
+
+        .history-item .amount {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f85149;
+        }
+
+        .history-item .status {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .history-item .status.pending {
+            background: #2d1f0e;
+            color: #d29922;
+        }
+
+        .history-item .status.approved {
+            background: #1f3a2a;
+            color: #3fb950;
+        }
+
+        .history-item .status.rejected {
+            background: #2d1215;
+            color: #f85149;
+        }
+
+        /* ============================================================
+           REFERANS LİNK KUTUSU
+           ============================================================ */
+        .ref-link-box {
+            margin: 0 16px 32px;
+            padding: 16px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 16px;
+        }
+
+        .ref-link-box > p {
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b949e;
+            letter-spacing: 0.03em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .copy-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .copy-box input {
+            flex: 1;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #8b949e;
+            font-family: 'Inter', monospace;
+            outline: none;
+            min-width: 0;
+        }
+
+        .copy-box button {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #3fb950;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .copy-box button:active {
+            background: #2d333b;
+        }
+
+        /* ============================================================
+           MODAL
+           ============================================================ */
+        .modal-container {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .modal-container.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 0 0 24px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid #30363d;
+            position: sticky;
+            top: 0;
+            background: #161b22;
+            z-index: 1;
+        }
+
+        .modal-header h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #e6edf3;
+            letter-spacing: -0.02em;
+        }
+
+        .modal-header button {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8b949e;
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .modal-header button:active {
+            background: #2d333b;
+            color: #e6edf3;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-hint {
+            font-size: 13px;
+            color: #8b949e;
+            line-height: 1.5;
+        }
+
+        .modal-input {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #e6edf3;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+
+        .modal-input:focus {
+            border-color: #3fb950;
+        }
+
+        .submit-btn {
+            background: #238636;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .referral-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .ref-stat {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ref-label {
+            font-size: 11px;
+            color: #8b949e;
+            font-weight: 500;
+        }
+
+        .ref-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3fb950;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DASHBOARD — Başlangıçta gizli, JavaScript onaylı ise açar -->
+    <div id="app">
+        <!-- Header -->
+        <header>
+            <div class="user-info">
+                <img id="user-photo"
+                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='22' fill='%2321262d'/%3E%3Ccircle cx='22' cy='17' r='8' fill='%233fb950' opacity='0.7'/%3E%3Cellipse cx='22' cy='36' rx='13' ry='9' fill='%233fb950' opacity='0.5'/%3E%3C/svg%3E"
+                     alt="User">
+                <div>
+                    <h3 id="user-name">Yükleniyor...</h3>
+                    <span id="user-status" class="badge">PENDING</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <i class="fas fa-bell"></i>
+            </div>
+        </header>
+
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <p>Toplam Varlıklarım</p>
+            <h1 id="total-balance">0.00 <span class="currency">PUAN</span></h1>
+            <div class="balance-details">
+                <div class="detail-item">
+                    <span>Net Bakiye</span>
+                    <strong id="net-balance">0.00</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Bloke Bakiye</span>
+                    <strong id="blocked-balance">0.00</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="action-btn" onclick="openSection('withdraw')">
+                <i class="fas fa-hand-holding-dollar"></i>
+                <span>Ödül Çek</span>
+            </button>
+            <button class="action-btn" onclick="openSection('referral')">
+                <i class="fas fa-users"></i>
+                <span>Referanslar</span>
+            </button>
+            <button class="action-btn" onclick="openSection('wallet')">
+                <i class="fas fa-wallet"></i>
+                <span>Cüzdanım</span>
+            </button>
+        </div>
+
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="section-header">
+                <h3>İstatistikler</h3>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="label">1. Derinlik</span>
+                    <span class="value" id="ref-l1">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">2. Derinlik</span>
+                    <span class="value" id="ref-l2">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">3. Derinlik</span>
+                    <span class="value" id="ref-l3">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">4. Derinlik</span>
+                    <span class="value" id="ref-l4">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent History -->
+        <section class="history-section">
+            <div class="section-header">
+                <h3>Son İşlemler</h3>
+                <a href="#" onclick="openSection('history')">Tümü</a>
+            </div>
+            <div id="history-list" class="history-list">
+                <p class="empty-msg">İşlem geçmişi bulunamadı.</p>
+            </div>
+        </section>
+
+        <!-- Referans Link -->
+        <div class="ref-link-box">
+            <p>Sizin Referans Linkiniz</p>
+            <div class="copy-box">
+                <input type="text" id="ref-link" readonly value="Yükleniyor...">
+                <button onclick="copyRef()"><i class="fas fa-copy"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENDING EKRAN -->
+    <div id="access-denied-pending" class="access-denied">
+        <div class="icon-circle pending-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h2>Onayınız Bekleniyor</h2>
+        <p>Kayıt bilgileriniz yönetici tarafından inceleniyor. Onay aldığınızda Premium Dashboard'a erişebileceksiniz.</p>
+        <p class="sub-text">İşlem süresi: 24-48 saat</p>
+    </div>
+
+    <!-- REJECTED EKRAN -->
+    <div id="access-denied-rejected" class="access-denied">
+        <div class="icon-circle rejected-icon">
+            <i class="fas fa-times"></i>
+        </div>
+        <h2>Kaydınız Reddedildi</h2>
+        <p>Kayıt bilgileriniz incelenmiş ancak onaylanamamıştır. Yeni bilgilerle tekrar kayıt olabilirsiniz.</p>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal-container" class="modal-container hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Başlık</h2>
+                <button onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-body" class="modal-body">
+            </div>
+        </div>
+    </div>
+
+    <!-- Uygulama JS -->
+    <script src="/web/app.js"></script>
+</body>
+</html>
