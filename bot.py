@@ -43,7 +43,7 @@ MIN_WITHDRAW = 50.0
 
 # NGROK ADRESİNİZ (Değişirse burayı güncelleyin)
 # Railway'e deploy ederseniz WEB_APP_URL ortam değişkeninden alınır
-WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://residence-sardine-professed.ngrok-free.dev")
+WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://sctnetwrk-production.up.railway.app")
 
 CIPHER_KEY = b'HNVx7KEG-fZl9y3Y7JGIgHPZHJA2WX0_soRIjwH6Dqk='
 cipher_suite = Fernet(CIPHER_KEY)
