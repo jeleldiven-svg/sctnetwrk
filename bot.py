@@ -48,8 +48,8 @@ WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://residence-sardine-professed
 CIPHER_KEY = b'HNVx7KEG-fZl9y3Y7JGIgHPZHJA2WX0_soRIjwH6Dqk='
 cipher_suite = Fernet(CIPHER_KEY)
 
-DB_PATH = "veri.db"
-BACKUP_DIR = "backups"
+DB_PATH = "/app/data/veri.db"
+BACKUP_DIR = "/app/data/backups"
 MAX_BACKUPS = 7
 
 # ============================================================
