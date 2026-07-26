@@ -50,7 +50,7 @@ cipher_suite = Fernet(CIPHER_KEY)
 
 DB_PATH = "/app/data/veri.db"
 BACKUP_DIR = "/app/data/backups"
-MAX_BACKUPS = 7
+MAX_BACKUPS = 1
 
 # ============================================================
 # REFERANS ÖDÜL ORANLARI (Yatırım miktarına göre)
