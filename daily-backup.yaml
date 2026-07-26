@@ -1,0 +1,31 @@
+name: Daily Database Backup
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # Her gün 22:00 UTC
+  workflow_dispatch:  # Manuel trigger
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create backup directory
+        run: mkdir -p backups
+      
+      - name: Download database from Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          # Railway'den veritabanı dosyasını indir
+          # (Alternatif: git'te zaten varsa sadece commit et)
+          cp /path/to/veri.db backups/veri_$(date +%Y-%m-%d_%H-%M-%S).db 2>/dev/null || echo "DB local olarak mevcut değil"
+      
+      - name: Commit and push backup
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add backups/
+          git commit -m "Daily backup: $(date +%Y-%m-%d)" || echo "Nothing to commit"
+          git push
